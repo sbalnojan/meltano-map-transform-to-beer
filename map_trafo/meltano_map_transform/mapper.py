@@ -8,7 +8,29 @@ from singer_sdk import _singerlib as singer
 from singer_sdk.helpers._util import utc_now
 from singer_sdk.mapper import PluginMapper
 from singer_sdk.mapper_base import InlineMapper
+import logging
+import requests
 
+def foo_bar(input: str) -> str:
+    """
+    Turns every string into "foobar".
+    """
+    return "foobar"
+
+def replace_with_beer(input: str) -> str:
+    """
+    Calls the random Data API for beers and replaces your string with a beer.
+    """
+    URL = "https://random-data-api.com/api/v2/beers"
+    r = requests.get(url = URL)
+
+    data = r.json()
+
+    return data["name"]
+
+
+FOOBAR_OPTION = "__foobar__"
+BEER_OPTION = "__beer__"
 
 class StreamTransform(InlineMapper):
     """A map transformer which implements the Stream Maps capability."""
@@ -108,9 +130,29 @@ class StreamTransform(InlineMapper):
         """
         self._assert_line_requires(message_dict, requires={"stream", "record"})
 
+
+
         stream_id: str = message_dict["stream"]
         for stream_map in self.mapper.stream_maps[stream_id]:
             mapped_record = stream_map.transform(message_dict["record"])
+
+            # This is my new magic...
+            stream_map_config = self.config["stream_map_config"]
+            if FOOBAR_OPTION in stream_map_config:
+                foobar_columns = stream_map_config[FOOBAR_OPTION]
+
+                for column in foobar_columns:
+                    mapped_record[column] = foo_bar(mapped_record[column])
+
+            if BEER_OPTION in stream_map_config:
+                beer_columns = stream_map_config[BEER_OPTION]
+                logging.info(f"Found {len(beer_columns)} beer columns: %s", beer_columns)
+                for column in beer_columns:
+                    mapped_record[column] = replace_with_beer(mapped_record[column])
+                
+            # logging.info("New record %s", mapped_record)
+            # End of my terrible Python code
+
             if mapped_record is not None:
                 record_message = singer.RecordMessage(
                     stream=stream_map.stream_alias,

@@ -11,12 +11,10 @@ plugins:
     variant: meltanolabs
     pip_url: git+https://github.com/MeltanoLabs/target-sqlite.git
   mappers:
-  - name: meltano-map-transformer
-    pip_url: .
+  - name: my-own
+    namespace: meltano_map_trafonsform
+    pip_url: /map_trafo
     executable: meltano-map-transform
-    settings:
-    - name: stream_maps
-      kind: object
     mappings:
     - name: hash_email
       config:
@@ -26,9 +24,12 @@ plugins:
             email:      # drop the PII field from RECORD and SCHEMA messages
             email_domain: email.split('@')[-1]
             email_hash: md5(config['hash_seed'] + email)
+            non_beer: email
             __else__: null
         stream_map_config:
-          hash_seed: 01AWZh7A6DzGm6iJZZ2T
+          hash_seed: 01AWZh7A6DzGm6iJZZ2
+          __foobar__: ["email_hash","email_domain"]
+          __beer__: ["non_beer"]
 environments:
 - name: dev
   config:
@@ -46,4 +47,6 @@ environments:
           batch_size: 200
           database: output/$MELTANO_EXTRACTOR_NAMESPACE.db
 
-project_id: 33080f0b-2d0f-4fba-b7f1-727bbf080f91
+
+
+project_id: c0543dd9-8bc9-48ad-8f28-bbf0899d62b8

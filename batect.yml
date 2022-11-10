@@ -1,0 +1,37 @@
+containers:
+  build-env:
+    image: meltano/meltano:v2.8.0-python3.8 #v2.4.0-python3.8 
+    working_directory: / # going somewhere else so I can copy stuff in...
+   # run_as_current_user:
+      #enabled: true
+   #   home_directory: /home/container-user
+  #  volumes:
+  #    - local: ./new_project
+  #      container: /new_project
+  #      options: cached
+    volumes:
+      - local: ./new_project
+        container: /new_project
+        options: cached
+
+      - local: ./map_trafo
+        container: /map_trafo
+        options: cached
+
+tasks:
+  melt:
+    description: Open a shell in our cool meltano env to run some stuff. Make sure to launch_mock in a separate terminal tab!
+    group: Do these tasks
+    run:
+      container: build-env
+      entrypoint: sh
+
+  run:
+    description: Open a shell in our cool meltano env to run some stuff. Make sure to launch_mock in a separate terminal tab!
+    group: Do these tasks
+    run:
+      container: build-env
+      entrypoint: sh -c 'meltano install; meltano run tap-csv hash_email target-sqlite'
+      # meltano run tap-csv hash_email target-sqlite
+      # meltano state clear dev:tap-csv-to-target-sqlite
+      # meltano install mapper my-own
